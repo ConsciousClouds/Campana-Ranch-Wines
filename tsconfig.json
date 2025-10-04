@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
+    "target": "ES2022",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
@@ -19,7 +19,22 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@modules/*": ["./src/modules/*"],
+      "@catalog/*": ["./src/modules/catalog/*"],
+      "@commerce/*": ["./src/modules/commerce/*"],
+      "@content/*": ["./src/modules/content/*"],
+      "@club/*": ["./src/modules/club/*"],
+      "@customer/*": ["./src/modules/customer/*"],
+      "@events/*": ["./src/modules/events/*"],
+      "@analytics/*": ["./src/modules/analytics/*"],
+      "@shared/*": ["./src/shared/*"],
+      "@infrastructure/*": ["./src/infrastructure/*"],
+      "@components/*": ["./src/shared/components/*"],
+      "@hooks/*": ["./src/shared/hooks/*"],
+      "@utils/*": ["./src/shared/utils/*"],
+      "@types/*": ["./src/shared/types/*"],
+      "@config/*": ["./src/shared/config/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
