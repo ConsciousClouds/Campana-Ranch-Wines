@@ -64,10 +64,24 @@ export default function Header() {
         <div className={`flex items-center justify-between transition-all duration-500 ${
           isScrolled ? 'h-16' : 'h-32'
         }`}>
-          {/* Logo with Elegant Animation */}
+          {/* Logo with Elegant Animation - Adaptive based on background */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center group relative">
               <div className="relative transform transition-all duration-500 group-hover:scale-105">
+                {/* Light logo for dark backgrounds */}
+                <Image
+                  src="/campana-logo-light.png"
+                  alt="Campana Ranch Wines"
+                  width={280}
+                  height={130}
+                  className={`transition-all duration-500 ${
+                    isScrolled ? 'h-10 w-auto' : 'h-24 w-auto'
+                  } filter drop-shadow-sm group-hover:drop-shadow-md ${
+                    isDarkBackground && !isScrolled && !isWineDetailPage ? 'opacity-100' : 'opacity-0 absolute'
+                  }`}
+                  priority
+                />
+                {/* Regular logo for light backgrounds */}
                 <Image
                   src="/campana-logo.png"
                   alt="Campana Ranch Wines"
@@ -75,7 +89,9 @@ export default function Header() {
                   height={130}
                   className={`transition-all duration-500 ${
                     isScrolled ? 'h-10 w-auto' : 'h-24 w-auto'
-                  } filter drop-shadow-sm group-hover:drop-shadow-md`}
+                  } filter drop-shadow-sm group-hover:drop-shadow-md ${
+                    isDarkBackground && !isScrolled && !isWineDetailPage ? 'opacity-0 absolute' : 'opacity-100'
+                  }`}
                   priority
                 />
                 {/* Subtle glow effect on hover */}
