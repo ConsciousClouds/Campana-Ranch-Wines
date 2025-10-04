@@ -6,25 +6,39 @@ import Link from 'next/link'
 import { mockWines } from '@/src/modules/wines/services/mockData'
 
 export default function WineCollection() {
-  const [selectedCategory, setSelectedCategory] = useState('all')
   const sectionRef = useRef<HTMLDivElement>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [isVisible, setIsVisible] = useState(false)
+  const [canScrollLeft, setCanScrollLeft] = useState(false)
+  const [canScrollRight, setCanScrollRight] = useState(true)
 
-  const categories = [
-    { id: 'all', name: 'All Wines' },
-    { id: 'red', name: 'Red Wines' },
-    { id: 'white', name: 'White Wines' },
-    { id: 'rose', name: 'Rosé' },
-  ]
+  // Get latest releases (most recent vintages, featured wines)
+  const latestReleases = mockWines
+    .filter(wine => wine.featured || wine.vintage >= 2020)
+    .sort((a, b) => b.vintage - a.vintage)
+    .slice(0, 8)
 
-  const filteredWines = selectedCategory === 'all'
-    ? mockWines.slice(0, 6)
-    : mockWines.filter(wine => {
-        if (selectedCategory === 'red') return wine.category === 'red'
-        if (selectedCategory === 'white') return wine.category === 'white'
-        if (selectedCategory === 'rose') return wine.category === 'rose'
-        return false
-      }).slice(0, 6)
+  const checkScrollButtons = () => {
+    if (scrollContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current
+      setCanScrollLeft(scrollLeft > 0)
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10)
+    }
+  }
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollContainerRef.current) {
+      const scrollAmount = 400
+      const newScrollLeft = direction === 'left' 
+        ? scrollContainerRef.current.scrollLeft - scrollAmount
+        : scrollContainerRef.current.scrollLeft + scrollAmount
+      
+      scrollContainerRef.current.scrollTo({
+        left: newScrollLeft,
+        behavior: 'smooth'
+      })
+    }
+  }
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -43,100 +57,174 @@ export default function WineCollection() {
     return () => observer.disconnect()
   }, [])
 
+  useEffect(() => {
+    const scrollContainer = scrollContainerRef.current
+    if (scrollContainer) {
+      checkScrollButtons()
+      scrollContainer.addEventListener('scroll', checkScrollButtons)
+      window.addEventListener('resize', checkScrollButtons)
+      
+      return () => {
+        scrollContainer.removeEventListener('scroll', checkScrollButtons)
+        window.removeEventListener('resize', checkScrollButtons)
+      }
+    }
+  }, [])
+
   return (
     <section ref={sectionRef} className="py-24 bg-cream">
-      <div className="max-w-[1400px] mx-auto px-8">
+      <div className="max-w-[1600px] mx-auto px-6">
         {/* Section Header */}
-        <div className={`text-center mb-12 transition-all duration-1000 ${
+        <div className={`text-center mb-16 transition-all duration-1000 ${
           isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-10'
         }`}>
-          <p className="font-poppins text-xs tracking-[0.3em] text-wine-600 uppercase mb-6">Our Collection</p>
+          <div className="flex items-center justify-center gap-6 mb-6">
+            <div className="w-16 h-[1px] bg-wine-300" />
+            <p className="font-poppins text-[10px] tracking-[0.3em] text-wine-600 uppercase">Latest Releases</p>
+            <div className="w-16 h-[1px] bg-wine-300" />
+          </div>
           <h2 className="font-cinzel font-light text-4xl lg:text-5xl text-gray-900 mb-4">
             Exceptional Wines
           </h2>
-          <p className="font-poppins text-base text-gray-600 max-w-2xl mx-auto">
-            Each bottle represents our commitment to excellence, from vineyard to glass
+          <p className="font-poppins text-sm text-gray-600 max-w-2xl mx-auto">
+            Discover our newest vintages and celebrated releases
           </p>
         </div>
 
-        {/* Category Filter */}
-        <div className={`flex justify-center gap-6 mb-12 transition-all duration-1000 delay-300 ${
-          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
-        }`}>
-          {categories.map((category) => (
-            <button
-              key={category.id}
-              onClick={() => setSelectedCategory(category.id)}
-              className={`font-poppins text-[11px] tracking-[0.15em] uppercase px-4 py-2 transition-all duration-300 ${
-                selectedCategory === category.id
-                  ? 'text-gray-900 border-b border-gray-900'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              {category.name}
-            </button>
-          ))}
-        </div>
+        {/* Horizontal Scroller Container */}
+        <div className="relative">
+          {/* Scroll Buttons */}
+          <button
+            onClick={() => scroll('left')}
+            disabled={!canScrollLeft}
+            className={`absolute left-0 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center transition-all duration-300 ${
+              canScrollLeft 
+                ? 'opacity-100 hover:bg-white hover:scale-110' 
+                : 'opacity-0 pointer-events-none'
+            }`}
+            aria-label="Scroll left"
+          >
+            <svg className="w-6 h-6 text-wine-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
 
-        {/* Wine Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-12">
-          {filteredWines.map((wine, index) => (
-            <div
-              key={wine.id}
-              className={`group cursor-pointer transition-all duration-700 delay-${index * 100} ${
-                isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
-              }`}
-            >
-              <Link href={`/wines/${wine.id}`}>
-                {/* Wine Bottle */}
-                <div className="relative h-80 mb-6 overflow-hidden bg-gradient-to-b from-stone-50 to-cream">
-                  <Image
-                    src={wine.image}
-                    alt={wine.name}
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    className="object-contain transform group-hover:scale-105 transition-transform duration-700"
-                  />
+          <button
+            onClick={() => scroll('right')}
+            disabled={!canScrollRight}
+            className={`absolute right-0 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center transition-all duration-300 ${
+              canScrollRight 
+                ? 'opacity-100 hover:bg-white hover:scale-110' 
+                : 'opacity-0 pointer-events-none'
+            }`}
+            aria-label="Scroll right"
+          >
+            <svg className="w-6 h-6 text-wine-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
 
-                  {/* Overlay on hover */}
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-500"></div>
+          {/* Scrollable Wine Cards */}
+          <div 
+            ref={scrollContainerRef}
+            className="flex gap-6 overflow-x-auto scrollbar-hide scroll-smooth pb-4 px-12"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {latestReleases.map((wine, index) => (
+              <Link
+                key={wine.id}
+                href={`/wines/${wine.id}`}
+                className={`group flex-shrink-0 w-[280px] transition-all duration-700 ${
+                  isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+                }`}
+                style={{ transitionDelay: `${index * 100}ms` }}
+              >
+                {/* Tighter Card Design */}
+                <div className="bg-white rounded-sm shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden h-full border border-gray-100">
+                  {/* Wine Image - Compact */}
+                  <div className="relative h-64 overflow-hidden bg-gradient-to-b from-stone-50 to-white">
+                    <Image
+                      src={wine.image}
+                      alt={wine.name}
+                      fill
+                      sizes="280px"
+                      className="object-contain p-6 transform group-hover:scale-110 transition-transform duration-700"
+                    />
+                    
+                    {/* New Release Badge */}
+                    {wine.vintage >= 2022 && (
+                      <div className="absolute top-3 right-3 bg-wine-600 text-white px-3 py-1 text-[9px] font-poppins tracking-wider uppercase">
+                        New
+                      </div>
+                    )}
 
-                  {/* Quick view button */}
-                  <div className="absolute bottom-0 left-0 right-0 p-6 transform translate-y-full group-hover:translate-y-0 transition-transform duration-500">
-                    <span className="block bg-white text-wine-700 text-center py-3 font-cinzel text-sm tracking-wider">
-                      VIEW DETAILS
-                    </span>
+                    {/* Featured Badge */}
+                    {wine.featured && (
+                      <div className="absolute top-3 left-3 bg-gold-500 text-white px-3 py-1 text-[9px] font-poppins tracking-wider uppercase">
+                        Featured
+                      </div>
+                    )}
                   </div>
-                </div>
 
-                {/* Wine Info */}
-                <div className="text-center">
-                  <p className="font-poppins text-[10px] tracking-[0.3em] text-gray-500 uppercase mb-2">{wine.varietal}</p>
-                  <h3 className="font-cinzel text-xl text-gray-900 mb-2">{wine.name}</h3>
-                  <p className="font-bodoni text-2xl text-gray-800">{wine.vintage}</p>
+                  {/* Wine Info - Compact */}
+                  <div className="p-5 text-center">
+                    <p className="font-poppins text-[9px] tracking-[0.25em] text-gray-500 uppercase mb-2">
+                      {wine.varietal}
+                    </p>
+                    <h3 className="font-cinzel text-lg text-gray-900 mb-1 leading-tight">
+                      {wine.name}
+                    </h3>
+                    <p className="font-bodoni text-xl text-gray-700 mb-3">
+                      {wine.vintage}
+                    </p>
 
-                  {/* Price */}
-                  <div className="mt-4">
-                    <p className="font-bodoni text-2xl text-gray-900">${wine.price}</p>
+                    {/* Divider */}
+                    <div className="w-12 h-[1px] bg-gray-200 mx-auto mb-3" />
+
+                    {/* Price */}
+                    <p className="font-bodoni text-2xl text-gray-900 mb-3">
+                      ${wine.price}
+                    </p>
+
+                    {/* Quick Info */}
+                    <div className="flex items-center justify-center gap-3 text-[10px] text-gray-500 mb-4">
+                      <span>{wine.alcohol}</span>
+                      <span>•</span>
+                      <span>{wine.production}</span>
+                    </div>
+
+                    {/* View Button */}
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <span className="inline-block w-full bg-wine-600 text-white py-2 font-poppins text-[10px] tracking-[0.2em] uppercase hover:bg-wine-700 transition-colors">
+                        View Details
+                      </span>
+                    </div>
                   </div>
                 </div>
               </Link>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         {/* View All Button */}
-        <div className={`text-center mt-16 transition-all duration-1000 delay-700 ${
+        <div className={`text-center mt-12 transition-all duration-1000 delay-700 ${
           isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
         }`}>
           <Link
             href="/wines"
-            className="inline-block bg-wine-600 text-white px-10 py-4 font-poppins text-sm tracking-wider uppercase hover:bg-wine-700 transition-colors"
+            className="inline-block border-2 border-wine-600 text-wine-600 px-10 py-3 font-poppins text-xs tracking-[0.2em] uppercase hover:bg-wine-600 hover:text-white transition-all duration-300"
           >
             View Full Collection
           </Link>
         </div>
       </div>
+
+      {/* Hide scrollbar globally for this section */}
+      <style jsx>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
     </section>
   )
 }
