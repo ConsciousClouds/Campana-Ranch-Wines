@@ -186,11 +186,14 @@ export default function WineCollection() {
                       ${wine.price}
                     </p>
 
-                    {/* Quick Info */}
-                    <div className="flex items-center justify-center gap-3 text-[10px] text-gray-500 mb-4">
-                      <span>{wine.alcohol}</span>
-                      <span>•</span>
-                      <span>{wine.production}</span>
+                    {/* Quick Info - Barrel Count */}
+                    <div className="space-y-1 mb-4">
+                      <div className="flex items-center justify-center gap-2 text-[10px] text-gray-500">
+                        <span>{wine.alcohol}</span>
+                      </div>
+                      <div className="text-[10px] text-wine-600 font-medium">
+                        {wine.production}
+                      </div>
                     </div>
 
                     {/* View Button */}
